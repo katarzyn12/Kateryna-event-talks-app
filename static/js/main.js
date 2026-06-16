@@ -427,13 +427,40 @@ function renderFeed() {
     if (visibleEntriesCount === 0) {
         const emptyState = document.createElement('div');
         emptyState.className = 'feed-loader';
-        emptyState.innerHTML = `
+        
+        const svg = `
             <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <p>No release notes found matching the filters or search keywords.</p>
         `;
+        const text = `<p>No release notes found matching the filters or search keywords.</p>`;
+        
+        emptyState.innerHTML = svg + text;
+        
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'btn btn-sm btn-primary';
+        resetBtn.innerText = 'Reset Filters & Search';
+        resetBtn.addEventListener('click', () => {
+            // Reset state
+            appState.searchQuery = '';
+            appState.filterType = 'all';
+            
+            // Sync UI inputs
+            searchInput.value = '';
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                if (pill.dataset.type === 'all') {
+                    pill.classList.add('active');
+                } else {
+                    pill.classList.remove('active');
+                }
+            });
+            
+            // Re-render
+            renderFeed();
+        });
+        
+        emptyState.appendChild(resetBtn);
         releaseNotesList.appendChild(emptyState);
     }
 }
