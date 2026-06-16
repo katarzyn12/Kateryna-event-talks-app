@@ -73,6 +73,12 @@ const retryBtn = document.getElementById('retry-btn');
 const releaseNotesList = document.getElementById('release-notes-list');
 const cacheStatusText = document.getElementById('cache-status-text');
 
+// Theme toggle elements
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const themeIconSun = document.getElementById('theme-icon-sun');
+const themeIconMoon = document.getElementById('theme-icon-moon');
+const themeToggleText = document.getElementById('theme-toggle-text');
+
 // Composer DOM Elements
 const composerEmptyState = document.getElementById('composer-empty-state');
 const composerActiveState = document.getElementById('composer-active-state');
@@ -91,6 +97,7 @@ const toastMessage = document.getElementById('toast-message');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     fetchReleaseNotes(false);
     setupEventListeners();
 });
@@ -101,6 +108,7 @@ function setupEventListeners() {
     refreshBtn.addEventListener('click', () => fetchReleaseNotes(true));
     retryBtn.addEventListener('click', () => fetchReleaseNotes(true));
     exportCsvBtn.addEventListener('click', exportToCsv);
+    themeToggleBtn.addEventListener('click', toggleTheme);
     
     // Search & Filter
     searchInput.addEventListener('input', (e) => {
@@ -682,4 +690,36 @@ function showToast(msg) {
     toastTimeout = setTimeout(() => {
         toastNotification.classList.add('hidden');
     }, 2500);
+}
+
+// Initialize Theme
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        themeIconSun.classList.add('hidden');
+        themeIconMoon.classList.remove('hidden');
+        themeToggleText.innerText = 'Dark Mode';
+    } else {
+        document.body.classList.remove('light-theme');
+        themeIconSun.classList.remove('hidden');
+        themeIconMoon.classList.add('hidden');
+        themeToggleText.innerText = 'Light Mode';
+    }
+}
+
+// Toggle Theme
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    if (isLight) {
+        localStorage.setItem('theme', 'light');
+        themeIconSun.classList.add('hidden');
+        themeIconMoon.classList.remove('hidden');
+        themeToggleText.innerText = 'Dark Mode';
+    } else {
+        localStorage.setItem('theme', 'dark');
+        themeIconSun.classList.remove('hidden');
+        themeIconMoon.classList.add('hidden');
+        themeToggleText.innerText = 'Light Mode';
+    }
 }
