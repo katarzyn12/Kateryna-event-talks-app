@@ -63,6 +63,7 @@ function truncateText(str, max) {
 // DOM Elements
 const refreshBtn = document.getElementById('refresh-btn');
 const refreshIcon = document.getElementById('refresh-icon');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 const searchInput = document.getElementById('search-input');
 const typeFilters = document.getElementById('type-filters');
 const feedLoader = document.getElementById('feed-loader');
@@ -99,6 +100,7 @@ function setupEventListeners() {
     // Refresh & Retry
     refreshBtn.addEventListener('click', () => fetchReleaseNotes(true));
     retryBtn.addEventListener('click', () => fetchReleaseNotes(true));
+    exportCsvBtn.addEventListener('click', exportToCsv);
     
     // Search & Filter
     searchInput.addEventListener('input', (e) => {
@@ -384,6 +386,26 @@ function renderFeed() {
                 cardContent.className = 'card-content';
                 cardContent.innerHTML = update.html;
                 card.appendChild(cardContent);
+
+                // Card Footer with Copy to Clipboard Button
+                const cardFooter = document.createElement('div');
+                cardFooter.className = 'card-footer';
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn btn-xs btn-secondary card-copy-btn';
+                copyBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    <span>Copy to Clipboard</span>
+                `;
+                copyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    copyToClipboard(update.text, "Update text copied!");
+                });
+                cardFooter.appendChild(copyBtn);
+                card.appendChild(cardFooter);
                 
                 cardsContainer.appendChild(card);
             });
@@ -583,6 +605,67 @@ function copyToClipboard(text, successMessage) {
         }
         document.body.removeChild(textArea);
     });
+}
+
+// Export release notes to CSV file
+function exportToCsv() {
+    if (!appState.releaseNotes || appState.releaseNotes.length === 0) {
+        showToast("No release notes available to export.");
+        return;
+    }
+    
+    const csvRows = [];
+    csvRows.push(['Date', 'Type', 'Text', 'Link']);
+    
+    appState.releaseNotes.forEach(entry => {
+        entry.updates.forEach(update => {
+            // Filter by type
+            if (appState.filterType !== 'all' && update.type.toLowerCase() !== appState.filterType.toLowerCase()) {
+                return;
+            }
+            // Filter by search query
+            if (appState.searchQuery) {
+                const textMatch = update.text.toLowerCase().includes(appState.searchQuery);
+                const typeMatch = update.type.toLowerCase().includes(appState.searchQuery);
+                if (!textMatch && !typeMatch) return;
+            }
+            
+            const escapeCsv = (str) => {
+                if (!str) return '';
+                // Wrap in double quotes and escape any internal double quotes by doubling them
+                return `"${str.replace(/"/g, '""')}"`;
+            };
+            
+            csvRows.push([
+                escapeCsv(entry.date),
+                escapeCsv(update.type),
+                escapeCsv(update.text),
+                escapeCsv(entry.link)
+            ]);
+        });
+    });
+    
+    if (csvRows.length <= 1) {
+        showToast("No matching release notes to export.");
+        return;
+    }
+    
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    
+    const dateStr = new Date().toISOString().split('T')[0];
+    const typeStr = appState.filterType !== 'all' ? `_${appState.filterType.toLowerCase()}` : '';
+    const searchStr = appState.searchQuery ? `_search_${appState.searchQuery.replace(/[^a-z0-9]/gi, '_')}` : '';
+    link.setAttribute("download", `bigquery_release_notes_${dateStr}${typeStr}${searchStr}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast(`Exported ${csvRows.length - 1} updates to CSV!`);
 }
 
 // Toast notification helper

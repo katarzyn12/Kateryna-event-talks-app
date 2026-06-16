@@ -659,6 +659,35 @@ h1, h2, h3, h4 {
     color: inherit;
 }
 
+/* Card Footer Actions */
+.card-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.btn-xs {
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    border-radius: var(--radius-sm);
+    gap: 4px;
+    height: 24px;
+}
+
+.card-copy-btn {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-secondary);
+    border: 1px solid var(--card-border);
+}
+
+.card-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
 /* Right Section: Composer Panel */
 .composer-section {
     position: relative;
